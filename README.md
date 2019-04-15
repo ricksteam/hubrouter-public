@@ -4,7 +4,7 @@ This module produces Node.js express routes to interface with the Github API.
 To use, simply import the router and assign it to a URL path:
 
 ```javascript
-const routes = require('githubrouter');
+const routes = require('@c-hess/githubrouter');
 
 app.use("/", routes);
 ```
