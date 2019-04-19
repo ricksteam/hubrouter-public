@@ -8,6 +8,9 @@
     "C Hessler <chessler@unomaha.edu>"
   ],
   "license": "MIT",
+  "scripts": {
+    "test": "mocha"
+  },
   "dependencies": {
     "axios": "^0.18.0",
     "express": "^4.16.4",
