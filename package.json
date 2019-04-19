@@ -1,6 +1,6 @@
 {
   "name": "@c-hess/githubrouter",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "main": "index.js",
   "repository": "https://github.com/ricksteam/github-router-public.git",
   "contributors": [
