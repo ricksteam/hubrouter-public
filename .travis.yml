@@ -7,7 +7,7 @@ deploy:
   api_key:
     secure: eL4T3eUvdnfuiUPsyxgFCcKKCVoMK8eoMgo2ZDsDDfnxTbKD6iDkP+glJEkXRU09FQv7fW//Bc2PZCqxyh+OVEt3bMNRNh9frt2HDedy1DhJaYbxLHUmWFxuec9TrDD9nn35qopwZ7lHr++LAXJHXpNadnrB/pByhu5PyFVsh1wka6y7driYaj3FpWy7mT1fbWa3mi4vTMdUiotHDfTG0jAiCFd2wKJ7ywFmtiPU2hfuiKQbQJWn8nExPUvHT2GqY/yUIB225c106bCgJCcrBtEjqXaIEri8x+67CLnn119v1Dr4RZwdr5NnY7A2ppRoSFODR9zhSpIH4XztV3PdU2ou3WTh3I8bETvl4nArMuAdlJ7Sy/iAG2OVRl73W8YAXXHrcbYZBGGRGCZ4KgSZD8l6Dv5eAFW5ixglmnSzEqM08EXuv5AnUDldS+QJIHPwZUdF6QzsUOP4damLBdKDvXLatONRjFYDDJrFv0rZ02MSCYJFumE9J2f6PSH6HCLRg2COO+I5791Qri/gvbBEQw4XKbQn5cSZUzx5kzOC3C2XudOBTCR0qE6rqX+i7kEijzl4xJeFpgZJShQsoiyxlNlEdMVqkAtGnkL8T2krXubjUAnxehR0l7p8z4/cOZv/4OR5gnwro2H8XrpTn3FHlftR2iYEQ3nl+TVjB2fAvGg=
   on:
-    tags: true
+    branch: master
     repo: ricksteam/github-router-public
 notifications:
   email:
