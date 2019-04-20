@@ -1,4 +1,7 @@
 # Github API Router
+
+![Travis Build Status](https://travis-ci.org/ricksteam/github-router-public.svg?branch=master)
+
 This module produces Node.js express routes to interface with the Github API.
 
 To use, simply import the router and assign it to a URL path:
