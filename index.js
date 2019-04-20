@@ -7,7 +7,7 @@ let stringify = require("json-stringify-safe");
 
 const redisClient = redis.createClient();
 redisClient.on("connect", function() {
-  console.log("Connected to redis client");
+  console.log("Connected to redis");
 });
 
 function fromBase64ToAscii(base64) {
