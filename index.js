@@ -1,6 +1,13 @@
+const express = require("express");
 const routes = require("express").Router();
 const axios = require("axios");
 const redis = require("redis");
+const bodyParser = require("body-parser");
+
+
+app = express();
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
 const _ = require("lodash");
 let stringify = require("json-stringify-safe");
@@ -263,4 +270,5 @@ routes.get("/repos/:org", (req, res) => {
     });
 });
 
-module.exports = routes;
+app.use(routes);
+module.exports = app;
