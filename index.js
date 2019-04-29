@@ -14,7 +14,7 @@ let stringify = require("json-stringify-safe");
 
 const redisClient = redis.createClient();
 redisClient.on("connect", function() {
-  console.log("Connected to redis");
+  //console.log("Connected to redis");
 });
 
 function fromBase64ToAscii(base64) {
@@ -28,7 +28,7 @@ function fromAsciiToBase64(ascii) {
 function saveToGithub(owner, repo, filename, contents, token, message) {
   let realMessage = message ? message : "Created via file API";
   let call = `https://api.github.com/repos/${owner}/${repo}/contents/${filename}?access_token=${token}`;
-  console.log(call);
+  //console.log(call);
   return axios.put(call, {
     message: realMessage,
     content: fromAsciiToBase64(contents)
@@ -49,7 +49,7 @@ function updateToGithub(owner, repo, filename, contents, token, sha, message) {
 
 function getInGithub(owner, repo, filename, token) {
   let call = `https://api.github.com/repos/${owner}/${repo}/contents/${filename}?access_token=${token}`;
-  console.log(call);
+  //console.log(call);
   return axios.get(call);
 }
 
@@ -67,7 +67,7 @@ function deleteToGithub(owner, repo, filename, token, sha, message) {
 function mapFile(githubFileObject) {
   let toReturn = {};
   let keysToKeep = ["type", "name", "sha", "path"];
-  console.log(Object.entries(githubFileObject));
+  //console.log(Object.entries(githubFileObject));
   for (key in githubFileObject) {
     if (keysToKeep.includes(key)) {
       toReturn[key] = githubFileObject[key];
@@ -111,7 +111,7 @@ function retrieveFromGithub(res, org, repo, path, accessToken) {
   let promise = getInGithub(org, repo, path, accessToken);
   promise
     .then(result => {
-      console.log("Parsing result");
+      //console.log("Parsing result");
 
       //If the result is a directory, result.data is an array
       if (Array.isArray(result.data)) {
@@ -134,16 +134,16 @@ routes.post("/crud/retrieve/:org/:repo", (req, res) => {
   let path = req.body.path;
   let sha = req.body.sha;
   let org = req.params.org;
-  console.log(`Got db ${repo} ${path}`);
+  //console.log(`Got db ${repo} ${path}`);
 
   if (sha != undefined) {
-    console.log("Checking redis file entry for " + sha);
+    //console.log("Checking redis file entry for " + sha);
     redisClient.hgetall(sha, function(err, reply) {
       if (reply != null) {
-        console.log("Found entry for " + sha);
+        //console.log("Found entry for " + sha);
         res.send(reply);
       } else {
-        console.log("No entry found. Polling GitHub...");
+        //console.log("No entry found. Polling GitHub...");
         retrieveFromGithub(res, org, repo, path, accessToken);
       }
     });
@@ -183,10 +183,10 @@ routes.post("/crud/create/:org/:repo", (req, res) => {
   let message = req.body.message;
   let org = req.params.org;
 
-  console.log(`Got db ${repo} ${path} ${message}`);
+  //console.log(`Got db ${repo} ${path} ${message}`);
 
   let promise = saveToGithub(org, repo, path, content, accessToken, message);
-  console.log(promise);
+  //console.log(promise);
   promise
     .then(result => {
       res.send(result.data);
@@ -207,7 +207,7 @@ routes.post("/crud/update/:org/:repo", (req, res) => {
   let sha = req.body.sha;
   let org = req.params.org;
 
-  console.log(`Got db ${repo} ${path} ${message}`);
+  //console.log(`Got db ${repo} ${path} ${message}`);
 
   let promise = updateToGithub(
     org,
@@ -218,7 +218,7 @@ routes.post("/crud/update/:org/:repo", (req, res) => {
     sha,
     message
   );
-  console.log(promise);
+  //console.log(promise);
   promise
     .then(result => {
       res.send(result.data);
@@ -238,10 +238,10 @@ routes.post("/crud/delete/:org/:repo", (req, res) => {
   let sha = req.body.sha;
   let org = req.params.org;
 
-  console.log(`Got db ${repo} ${path} ${message}`);
+  //console.log(`Got db ${repo} ${path} ${message}`);
 
   let promise = deleteToGithub(org, repo, path, accessToken, sha, message);
-  console.log(promise);
+  //console.log(promise);
   promise
     .then(result => {
       res.send(result.data);
@@ -260,7 +260,7 @@ routes.get("/repos/:org", (req, res) => {
   axios
     .get(`https://api.github.com/orgs/${org}/repos?access_token=${accessToken}`)
     .then(result => {
-      console.log(result.data);
+      //console.log(result.data);
       let toSend = result.data.map(r => r.name);
       res.send(toSend);
     })
