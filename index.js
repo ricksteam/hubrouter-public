@@ -18,7 +18,7 @@ redisClient.on("connect", function() {
 });
 
 function fromBase64ToAscii(base64) {
-  return new Buffer(base64, "base64").toString("ascii");
+  return new Buffer(base64, "base64").toString();
 }
 
 function fromAsciiToBase64(ascii) {
