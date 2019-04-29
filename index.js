@@ -13,7 +13,7 @@ const _ = require("lodash");
 let stringify = require("json-stringify-safe");
 
 const redisClient = redis.createClient();
-redisClient.on("connect", function() {
+redisClient.on("connect", function() { 
   //console.log("Connected to redis");
 });
 
