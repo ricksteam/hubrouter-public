@@ -92,13 +92,14 @@ function mapDirectory(githubDirectoryObject) {
   return toReturn;
 }
 
-function mapFileLikeObjects(fileLikeArray) {
+function mapFileLikeObjects(fileLikeArray, includeReadme) {
   let toReturn = [];
 
   for (let i = 0; i < fileLikeArray.length; i++) {
     let fileLikeObject = fileLikeArray[i];
     if (fileLikeObject.type === "file") {
-      toReturn.push(mapFile(fileLikeObject));
+      if(fileLikeObject.name != "README.md" || includeReadme)
+        toReturn.push(mapFile(fileLikeObject));
     } else {
       toReturn.push(mapDirectory(fileLikeObject));
     }
@@ -107,7 +108,7 @@ function mapFileLikeObjects(fileLikeArray) {
   return toReturn;
 }
 
-function retrieveFromGithub(res, org, repo, path, accessToken) {
+function retrieveFromGithub(res, org, repo, path, accessToken, includeReadme) {
   let promise = getInGithub(org, repo, path, accessToken);
   promise
     .then(result => {
@@ -115,7 +116,7 @@ function retrieveFromGithub(res, org, repo, path, accessToken) {
 
       //If the result is a directory, result.data is an array
       if (Array.isArray(result.data)) {
-        res.send(mapFileLikeObjects(result.data));
+        res.send(mapFileLikeObjects(result.data, includeReadme));
       } else {
         let file = mapFile(result.data);
         redisClient.hmset(file.sha, file);
@@ -134,6 +135,7 @@ routes.post("/crud/retrieve/:org/:repo", (req, res) => {
   let path = req.body.path;
   let sha = req.body.sha;
   let org = req.params.org;
+  let includeReadme = req.body.includeReadme;
   //console.log(`Got db ${repo} ${path}`);
 
   if (sha != undefined) {
@@ -144,12 +146,12 @@ routes.post("/crud/retrieve/:org/:repo", (req, res) => {
         res.send(reply);
       } else {
         //console.log("No entry found. Polling GitHub...");
-        retrieveFromGithub(res, org, repo, path, accessToken);
+        retrieveFromGithub(res, org, repo, path, accessToken, includeReadme);
       }
     });
   } else {
     console.log("No sha in request body, skipping redis cache check...");
-    retrieveFromGithub(res, org, repo, path, accessToken);
+    retrieveFromGithub(res, org, repo, path, accessToken, includeReadme);
   }
 });
 
@@ -158,6 +160,7 @@ routes.get("/crud/retrieveAll/:org/:repo", (req, res) => {
   let accessToken = req.res.locals.accessToken;
   let repo = req.params.repo;
   let org = req.params.org;
+  let includeReadme = true;
 
   axios
     .get(
@@ -166,7 +169,7 @@ routes.get("/crud/retrieveAll/:org/:repo", (req, res) => {
     .then(result => {
       //If the result is a directory, result.data is an array
       if (Array.isArray(result.data)) {
-        res.send(mapFileLikeObjects(result.data));
+        res.send(mapFileLikeObjects(result.data, includeReadme));
       } else res.send(mapFile(result.data));
     })
     .catch(error => {
