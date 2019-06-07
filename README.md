@@ -3,7 +3,7 @@
 ![Travis Build Status](https://travis-ci.org/ricksteam/github-router-public.svg?branch=master)
 
 
-This module produces Node.js express routes to interface with the GitHub API to treat a GitHub as if it were the a backend database. Specifically, this add CRUD routes to create, retrieve, update and delete files in a specified GitHub repository for which you have rights to do so. Note that this project is not associateded with or officially endorsed by GitHub.com.
+This module produces Node.js express routes to interface with the GitHub API to treat a GitHub as if it were the a backend database. Specifically, this add CRUD routes to create, retrieve, update and delete files in a specified GitHub repository for which you have rights to do so. Note that this project is not associated with or officially endorsed by GitHub.com.
 
 In order to use this, you need:
 

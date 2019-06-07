@@ -1,7 +1,7 @@
 const express = require("express");
 const routes = require("express").Router();
 const axios = require("axios");
-const redis = require("redis");
+//const redis = require("redis");
 const bodyParser = require("body-parser");
 
 
@@ -12,10 +12,10 @@ app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 const _ = require("lodash");
 let stringify = require("json-stringify-safe");
 
-const redisClient = redis.createClient();
+/*const redisClient = redis.createClient();
 redisClient.on("connect", function() { 
   //console.log("Connected to redis");
-});
+});*/
 
 function fromBase64ToAscii(base64) {
   return new Buffer(base64, "base64").toString();
@@ -119,7 +119,7 @@ function retrieveFromGithub(res, org, repo, path, accessToken, includeReadme) {
         res.send(mapFileLikeObjects(result.data, includeReadme));
       } else {
         let file = mapFile(result.data);
-        redisClient.hmset(file.sha, file);
+        //redisClient.hmset(file.sha, file);
         res.send(mapFile(result.data));
       }
     })
@@ -138,7 +138,7 @@ routes.post("/crud/retrieve/:org/:repo", (req, res) => {
   let includeReadme = req.body.includeReadme;
   //console.log(`Got db ${repo} ${path}`);
 
-  if (sha != undefined) {
+  /*if (sha != undefined) {
     //console.log("Checking redis file entry for " + sha);
     redisClient.hgetall(sha, function(err, reply) {
       if (reply != null) {
@@ -152,7 +152,8 @@ routes.post("/crud/retrieve/:org/:repo", (req, res) => {
   } else {
     console.log("No sha in request body, skipping redis cache check...");
     retrieveFromGithub(res, org, repo, path, accessToken, includeReadme);
-  }
+  }*/
+  retrieveFromGithub(res, org, repo, path, accessToken, includeReadme);
 });
 
 //Get everything in a repo, up to 1,000 items
