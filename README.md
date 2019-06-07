@@ -23,7 +23,7 @@ To use, simply import the router and assign it to a URL path:
 
 ## Minimum working example
 ```javascript
-const githubRouter = require('@c-hess/githubrouter');
+const githubRouter = require('hubcrud');
 const app = require("express")();
 //const cors = require("cors"); //As needed
 const secrets = require("./secrets.js")
