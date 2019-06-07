@@ -4,8 +4,7 @@
   "main": "index.js",
   "repository": "https://github.com/ricksteam/hubrouter-public.git",
   "contributors": [
-    "B Ricks <bricks@unomaha.edu>",
-    "C Hessler <chessler@unomaha.edu>"
+    "BRicks Lab Student <brickslab@gmail.com>"
   ],
   "license": "MIT",
   "scripts": {
