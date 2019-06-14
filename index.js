@@ -121,7 +121,13 @@ function retrieveFromGithub(res, org, repo, path, accessToken, includeReadme) {
       } else {
         let file = mapFile(result.data);
         //redisClient.hmset(file.sha, file);
-        res.send(mapFile(result.data));
+        let mappedFile = mapFile(result.data);
+        //!! If the file is greater than 1mb, we have to fetch it using the blob api
+        if(mappedFile.size > 1024)
+        {
+          console.log("Have to get using the blob api.");
+        }
+        res.send(mappedFile);
       }
     })
     .catch(error => {
