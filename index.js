@@ -136,6 +136,11 @@ function retrieveFromGithub(res, org, repo, path, accessToken, includeReadme) {
     });
 }
 
+routes.get("/crud/hello", (req, res)=>{
+  console.log("Got a hello request");
+  res.send("Hello");
+});
+
 routes.post("/crud/retrieve/:org/:repo", (req, res) => {
   let accessToken = req.res.locals.accessToken;
   let repo = req.params.repo;
