@@ -54,6 +54,13 @@ function getInGithub(owner, repo, filename, token) {
   return axios.get(call);
 }
 
+function getInGithubWithSHA(owner, repo, sha, token) {
+  console.log("Doing a sha call " + sha);
+  let call = `https://api.github.com/repos/${owner}/${repo}/git/blobs/${sha}?access_token=${token}`;
+  //console.log(call);
+  return axios.get(call);
+}
+
 function deleteToGithub(owner, repo, filename, token, sha, message) {
   let realMessage = message ? message : "Created via file API";
   let call = `https://api.github.com/repos/${owner}/${repo}/contents/${filename}?access_token=${token}`;
@@ -99,7 +106,7 @@ function mapFileLikeObjects(fileLikeArray, includeReadme) {
   for (let i = 0; i < fileLikeArray.length; i++) {
     let fileLikeObject = fileLikeArray[i];
     if (fileLikeObject.type === "file") {
-      if(fileLikeObject.name != "README.md" || includeReadme)
+      if (fileLikeObject.name != "README.md" || includeReadme)
         toReturn.push(mapFile(fileLikeObject));
     } else {
       toReturn.push(mapDirectory(fileLikeObject));
@@ -109,8 +116,12 @@ function mapFileLikeObjects(fileLikeArray, includeReadme) {
   return toReturn;
 }
 
-function retrieveFromGithub(res, org, repo, path, accessToken, includeReadme) {
-  let promise = getInGithub(org, repo, path, accessToken);
+function retrieveFromGithub(res, org, repo, path, accessToken, sha, includeReadme) {
+  let promise;
+  if (sha)
+    promise = getInGithubWithSHA(org, repo, sha, accessToken);
+  else
+    promise = getInGithub(org, repo, path, accessToken);
   promise
     .then(result => {
       //console.log("Parsing result");
@@ -119,27 +130,19 @@ function retrieveFromGithub(res, org, repo, path, accessToken, includeReadme) {
       if (Array.isArray(result.data)) {
         res.send(mapFileLikeObjects(result.data, includeReadme));
       } else {
-        let file = mapFile(result.data);
-        //redisClient.hmset(file.sha, file);
         let mappedFile = mapFile(result.data);
-        //!! If the file is greater than 1mb, we have to fetch it using the blob api
-        if(mappedFile.size > 1024)
-        {
-          console.log("Have to get using the blob api.");
-        }
         res.send(mappedFile);
       }
+
+
     })
     .catch(error => {
-      console.log(error);
-      res.send("error");
+      console.log("Error " + error.response.data.message);
+
+      res.status(error.response.status);
+      res.send(error.response.statusText);
     });
 }
-
-routes.get("/crud/hello", (req, res)=>{
-  console.log("Got a hello request");
-  res.send("Hello");
-});
 
 routes.post("/crud/retrieve/:org/:repo", (req, res) => {
   let accessToken = req.res.locals.accessToken;
@@ -165,7 +168,7 @@ routes.post("/crud/retrieve/:org/:repo", (req, res) => {
     console.log("No sha in request body, skipping redis cache check...");
     retrieveFromGithub(res, org, repo, path, accessToken, includeReadme);
   }*/
-  retrieveFromGithub(res, org, repo, path, accessToken, includeReadme);
+  retrieveFromGithub(res, org, repo, path, accessToken, sha, includeReadme);
 });
 
 //Get everything in a repo, up to 1,000 items

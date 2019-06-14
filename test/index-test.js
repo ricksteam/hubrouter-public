@@ -26,7 +26,6 @@ let repo = "hubrouter-public";
 
 
 app.use("/", (req, res, next) => {
-  console.log(accessToken);
   res.locals.accessToken = accessToken
   next();
 })
@@ -42,11 +41,7 @@ app.use("/", routes);
 
 
 
-describe('This is always true', () => {
-  it('Should return true', () => {
-    assert.equal(true, true)
-  })
-});
+
 
 describe("Hubcrud functionality", function () {
   this.timeout(100000);
@@ -55,7 +50,7 @@ describe("Hubcrud functionality", function () {
 
       fs.readdir(testData, (err, localFiles) => {
 
-        if(err){
+        if (err) {
           done(err);
         }
 
@@ -73,8 +68,65 @@ describe("Hubcrud functionality", function () {
           })
       })
     })
+    it("Gets the contents of a small file w/o a sha", function (done) {
+
+      fs.readFile(testData + "/hello.world", "utf8", (err, localContents) => {
+        localContents = localContents.replace("\r", "");
+
+        if (err) {
+          done(err);
+        }
+
+        axios.post(`http://localhost:${port}/crud/retrieve/${org}/${repo}`, {
+          path: "test_data/hello.world"
+        })
+          .then(result => {
+            let gitContents = result.data.content;
+            assert.equal(localContents, gitContents);
+            done();
+          })
+          .catch(err => {
+            done(err);
+          })
+      });
+    });
+    it("Doesn't get a non-existant file", function (done) {
+      axios.post(`http://localhost:${port}/crud/retrieve/${org}/${repo}`, {
+        path: "bad_path.txt"
+      })
+        .then(result => {
+          done("Shouldn't have gotten here " + result.data);
+        })
+        .catch(err => {
+          done();
+        })
+    });
+    it("Gets the contents of a large file with a sha", function(done){
+      fs.readFile(testData + "/Noise.png", "utf8", (err, localContents) => {
+        
+        if (err) {
+          done(err);
+        }
+
+        axios.post(`http://localhost:${port}/crud/retrieve/${org}/${repo}`, {
+          path: "test_data/Noise.png",
+          sha: "28118e82fb7143e141024be09eb7f80e20bd097e"
+        })
+          .then(result => {
+            let gitContents = result.data.content;
+            assert.equal(localContents, gitContents);
+            done();
+          })
+          .catch(err => {
+            console.log(err.message);
+            done(new Error(err.message));
+          })
+      });
+    })
   })
 });
+
+
 
 before(function (done) {
   httpServer.listen(port, done);
