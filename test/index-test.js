@@ -101,9 +101,9 @@ describe("Hubcrud functionality", function () {
           done();
         })
     });
-    it("Gets the contents of a large file with a sha", function(done){
+    it("Gets the contents of a large file with a sha", function (done) {
       fs.readFile(testData + "/Noise.png", "utf8", (err, localContents) => {
-        
+
         if (err) {
           done(err);
         }
@@ -122,6 +122,26 @@ describe("Hubcrud functionality", function () {
             done(new Error(err.message));
           })
       });
+    });
+    it("Puts a file with size greater than 1mb", function (done) {
+      fs.readFile(testData + "/Noise.png", "utf8", (err, localContents) => {
+        if (err) {
+          done(err);
+        }
+
+        axios.post(`http://localhost:${port}/crud/create/${org}/${repo}`, {
+          path: "test_data/" + Math.random() + "Noise.png",
+          message: "Test commit",
+          content: localContents
+        })
+        .then(result=>{
+          done();
+        })
+        .catch(err=>{
+          consosle.log(err.message);
+          done(new Error(err.message));
+        })
+      })
     })
   })
 });
