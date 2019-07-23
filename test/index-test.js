@@ -37,7 +37,7 @@ app.use("/", routes);
 //before and after approach from https://stackoverflow.com/questions/38223053/ensuring-server-app-runs-before-mocha-tests-start
 
 
-
+let temp_sha = ""; //Sometimes we need to store a sha for a later operation.
 
 
 
@@ -155,14 +155,17 @@ describe("Hubcrud functionality", function () {
 
         axios.post(`http://localhost:${port}/crud/create/${org}/${repo}`, {
           path: "test_data/Temp_Noise.png",
-          message: "Test commit",
+          message: "[skip travis] Test commit",
           content: localContents
         })
         .then(result=>{
+          console.log(result.data.message);
+          //console.log(result.data.substr(0, 1000));
           done();
         })
         .catch(err=>{
-          consosle.log(err.message);
+          console.log("Error in put");
+          console.log(err.message);
           done(new Error(err.message));
         })
       })
@@ -175,14 +178,14 @@ describe("Hubcrud functionality", function () {
 
         axios.post(`http://localhost:${port}/crud/delete/${org}/${repo}`, {
           path: "test_data/Temp_Noise.png",
-          message: "Test commit",
-          content: localContents
+          message: "[skip travis] Test commit",
+          sha: "980a0d5f19a64b4b30a87d4206aade58726b60e3",
         })
         .then(result=>{
           done();
         })
         .catch(err=>{
-          consosle.log(err.message);
+          console.log(err.message);
           done(new Error(err.message));
         })
       })

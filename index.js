@@ -144,6 +144,7 @@ function getInGithubWithSHA(owner, repo, sha, token) {
 function deleteToGithub(owner, repo, filename, token, sha, message) {
   let realMessage = message ? message : "Created via file API";
   let call = `https://api.github.com/repos/${owner}/${repo}/contents/${filename}?access_token=${token}`;
+  console.log(call);
   return axios.delete(call, {
     data: {
       message: realMessage,
@@ -405,7 +406,7 @@ routes.post("/crud/delete/:org/:repo", (req, res) => {
   let sha = req.body.sha;
   let org = req.params.org;
 
-  //console.log(`Got db ${repo} ${path} ${message}`);
+  console.log(`Got db ${org} ${repo} ${path} ${message} ${sha}`);
 
   let promise = deleteToGithub(org, repo, path, accessToken, sha, message);
   //console.log(promise);
