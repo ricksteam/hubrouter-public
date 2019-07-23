@@ -147,14 +147,14 @@ describe("Hubcrud functionality", function () {
           })
       });
     });
-    /*it("Puts a file with size greater than 1mb", function (done) {
+    it("Puts a file with size greater than 1mb", function (done) {
       fs.readFile(testData + "/Noise.png", "utf8", (err, localContents) => {
         if (err) {
           done(err);
         }
 
         axios.post(`http://localhost:${port}/crud/create/${org}/${repo}`, {
-          path: "test_data/" + Math.random() + "Noise.png",
+          path: "test_data/Temp_Noise.png",
           message: "Test commit",
           content: localContents
         })
@@ -166,7 +166,27 @@ describe("Hubcrud functionality", function () {
           done(new Error(err.message));
         })
       })
-    })*/
+    });
+    it("Deletes a file", function (done) {
+      fs.readFile(testData + "/Temp_Noise.png", "utf8", (err, localContents) => {
+        if (err) {
+          done(err);
+        }
+
+        axios.post(`http://localhost:${port}/crud/delete/${org}/${repo}`, {
+          path: "test_data/Temp_Noise.png",
+          message: "Test commit",
+          content: localContents
+        })
+        .then(result=>{
+          done();
+        })
+        .catch(err=>{
+          consosle.log(err.message);
+          done(new Error(err.message));
+        })
+      })
+    });
   })
 });
 
