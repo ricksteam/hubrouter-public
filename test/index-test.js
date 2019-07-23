@@ -171,7 +171,7 @@ describe("Hubcrud functionality", function () {
       })
     });
     it("Deletes a file", function (done) {
-      fs.readFile(testData + "/Temp_Noise.png", "utf8", (err, localContents) => {
+      fs.readFile(testData + "/Noise.png", "utf8", (err, localContents) => {
         if (err) {
           done(err);
         }
