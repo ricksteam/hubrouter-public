@@ -82,6 +82,30 @@ describe("Hubcrud functionality", function () {
         })
           .then(result => {
             let gitContents = result.data.content;
+            console.log(result.data.sha);
+            assert.equal(localContents, gitContents);
+            done();
+          })
+          .catch(err => {
+            done(err);
+          })
+      });
+    });
+    it("Get the contents of a small file with a sha", function(done){
+      
+      fs.readFile(testData + "/hello.world", "utf8", (err, localContents) => {
+        localContents = localContents.replace("\r", "");
+
+        if (err) {
+          done(err);
+        }
+
+        axios.post(`http://localhost:${port}/crud/retrieve/${org}/${repo}`, {
+          sha: "980a0d5f19a64b4b30a87d4206aade58726b60e3"
+        })
+          .then(result => {
+            let gitContents = result.data.content;
+            console.log(result.data.sha);
             assert.equal(localContents, gitContents);
             done();
           })
@@ -123,7 +147,7 @@ describe("Hubcrud functionality", function () {
           })
       });
     });
-    it("Puts a file with size greater than 1mb", function (done) {
+    /*it("Puts a file with size greater than 1mb", function (done) {
       fs.readFile(testData + "/Noise.png", "utf8", (err, localContents) => {
         if (err) {
           done(err);
@@ -142,7 +166,7 @@ describe("Hubcrud functionality", function () {
           done(new Error(err.message));
         })
       })
-    })
+    })*/
   })
 });
 
