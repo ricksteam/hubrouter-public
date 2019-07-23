@@ -160,6 +160,8 @@ describe("Hubcrud functionality", function () {
         })
         .then(result=>{
           console.log(result.data.message);
+          console.log(result.data.content.sha);
+          temp_sha = result.data.content.sha;
           //console.log(result.data.substr(0, 1000));
           done();
         })
@@ -179,7 +181,7 @@ describe("Hubcrud functionality", function () {
         axios.post(`http://localhost:${port}/crud/delete/${org}/${repo}`, {
           path: "test_data/Temp_Noise.png",
           message: "[skip travis] Test commit",
-          sha: "980a0d5f19a64b4b30a87d4206aade58726b60e3",
+          sha: temp_sha,
         })
         .then(result=>{
           done();
