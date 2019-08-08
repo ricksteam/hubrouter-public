@@ -64,14 +64,109 @@ function fromAsciiToBase64(ascii) {
  * @param {String} message The commit message to attach to the commit
  * @return {Promise} The resulting promise from the commit network call.
  */
-function saveToGithub(owner, repo, filename, contents, token, message) {
+ function saveToGithub(owner, repo, filename, contents, token, message) {
   let realMessage = message ? message : "Created via file API";
-  let call = `https://api.github.com/repos/${owner}/${repo}/contents/${filename}?access_token=${token}`;
-  //console.log(call);
-  return axios.put(call, {
-    message: realMessage,
-    content: fromAsciiToBase64(contents)
-  });
+
+  //Get the HEAD. Process explained here http://www.levibotelho.com/development/commit-a-file-with-the-github-api/
+  let call = `https://api.github.com/repos/${owner}/${repo}/git/refs/heads/master?access_token=${token}`;
+  let commitURL, commitSHA, treeSHA, treeURL, blobSHA, nextTreeSHA, nextCommitSHA;
+  let p =  axios.get(call)
+    .then(result => {
+      console.log(result.data.ref);
+      console.log(result.data.object.url);
+      commitURL = result.data.object.url;
+      console.log(result.data.object.sha);
+
+
+      //Now get the commit object
+      return axios.get(commitURL);
+    })
+    .then(result=>{
+
+      commitSHA = result.data.sha;
+      treeSHA = result.data.tree.sha;
+      treeURL = result.data.tree.url;
+
+      //Now post blob of the data
+
+      return axios.post(`https://api.github.com/repos/${owner}/${repo}/git/blobs?access_token=${token}`,{
+        content: fromAsciiToBase64(contents),
+        encoding: "base64"
+      });
+    })
+    .then(result=>{
+
+      blobSHA = result.data.sha;
+
+      //Get the tree
+
+      return axios.get(treeURL + `?recursive=1&access_token=${token}`);
+    })
+    .then(result=>{
+
+      console.log(JSON.stringify(result.data, null, 2));
+
+      let newTreeSHA = result.data.sha;
+      console.log(newTreeSHA + " " + treeSHA);
+
+      //Create a new tree entry with the new file
+
+      let t = [{
+        path:filename,
+        type:"blob",
+        mode:"100644",
+        sha:blobSHA,
+      }];
+
+      console.log(t);
+
+      return axios.post(`https://api.github.com/repos/${owner}/${repo}/git/trees?access_token=${token}`,{
+        tree: t,
+        base_tree: newTreeSHA,
+      });
+    })
+    .then(result=>{
+      nextTreeSHA = result.data.sha;
+
+      //Create a new commit pointing to the that tree
+
+      return axios.post(`https://api.github.com/repos/${owner}/${repo}/git/commits?access_token=${token}`,{
+        message,
+        tree: nextTreeSHA,
+        parents: [commitSHA],
+      })
+
+    })
+    .then(result=>{
+
+      nextCommitSHA = result.data.sha;
+
+      //Now point the head to this commit
+      return axios.patch(`https://api.github.com/repos/${owner}/${repo}/git/refs/heads/master?access_token=${token}`,{
+        sha:nextCommitSHA
+      })
+
+
+    })
+    
+
+
+
+     /* let call = `https://api.github.com/repos/${owner}/${repo}/contents/${filename}?access_token=${token}`;
+      //console.log(call);
+      return axios.put(call, {
+        message: realMessage,
+        content: fromAsciiToBase64(contents)
+      });
+    })
+    /*.catch(err => {
+      console.log("ERROR in getting head reference. " + err);
+    })*/
+
+    return p;
+
+
+
 }
 
 /**
@@ -246,7 +341,7 @@ function retrieveFromGithub(res, org, repo, path, accessToken, sha, includeReadm
     promise = getInGithub(org, repo, path, accessToken);
   promise
     .then(result => {
-       //If the result is a directory, result.data is an array
+      //If the result is a directory, result.data is an array
       if (Array.isArray(result.data)) {
         res.send(mapFileLikeObjects(result.data, includeReadme));
       } else {
@@ -281,7 +376,7 @@ routes.post("/crud/retrieve/:org/:repo", (req, res) => {
   let sha = req.body.sha;
   let org = req.params.org;
   let includeReadme = req.body.includeReadme;
-  
+
   retrieveFromGithub(res, org, repo, path, accessToken, sha, includeReadme);
 });
 

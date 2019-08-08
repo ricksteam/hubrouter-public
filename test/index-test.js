@@ -37,7 +37,8 @@ app.use("/", routes);
 //before and after approach from https://stackoverflow.com/questions/38223053/ensuring-server-app-runs-before-mocha-tests-start
 
 
-let temp_sha = ""; //Sometimes we need to store a sha for a later operation.
+let medium_sha = ""; //Sometimes we need to store a sha for a later operation (such as deleting something we added).
+let large_sha = ""; //Sometimes we need to store a sha for a later operation (such as deleting something we added).
 
 
 
@@ -132,7 +133,7 @@ describe("Hubcrud functionality", function () {
           done();
         })
     });
-    it("Gets the contents of a large file with a sha", function (done) {
+    it("Gets the contents of a medium file with a sha", function (done) {
       fs.readFile(testData + "/Noise.png", "utf8", (err, localContents) => {
 
         if (err) {
@@ -154,7 +155,7 @@ describe("Hubcrud functionality", function () {
           })
       });
     });
-    it("Puts a file with size greater than 1mb", function (done) {
+    it("Puts a medium file (slightly larger than 1mb)", function (done) {
       fs.readFile(testData + "/Noise.png", "utf8", (err, localContents) => {
         if (err) {
           done(err);
@@ -168,7 +169,7 @@ describe("Hubcrud functionality", function () {
         .then(result=>{
           console.log(result.data.message);
           console.log(result.data.content.sha);
-          temp_sha = result.data.content.sha;
+          medium_sha = result.data.content.sha;
           //console.log(result.data.substr(0, 1000));
           done();
         })
@@ -179,7 +180,32 @@ describe("Hubcrud functionality", function () {
         })
       })
     });
-    it("Deletes a file", function (done) {
+    it("Puts a large file (~10mb)", function (done) {
+      fs.readFile(testData + "/Large.png", "utf8", (err, localContents) => {
+        if (err) {
+          done(err);
+        }
+
+        axios.post(`http://localhost:${port}/crud/create/${org}/${repo}`, {
+          path: "test_data/Temp_Large.png",
+          message: "[skip travis] Test commit",
+          content: localContents
+        })
+        .then(result=>{
+          console.log(result.data.message);
+          console.log(result.data.content.sha);
+          large_sha = result.data.content.sha;
+          //console.log(result.data.substr(0, 1000));
+          done();
+        })
+        .catch(err=>{
+          console.log("Error in put");
+          console.log(err.message);
+          done(new Error(err.message));
+        })
+      })
+    });
+    it("Deletes the medium file", function (done) {
       fs.readFile(testData + "/Noise.png", "utf8", (err, localContents) => {
         if (err) {
           done(err);
@@ -188,7 +214,27 @@ describe("Hubcrud functionality", function () {
         axios.post(`http://localhost:${port}/crud/delete/${org}/${repo}`, {
           path: "test_data/Temp_Noise.png",
           message: "[skip travis] Test commit",
-          sha: temp_sha,
+          sha: medium_sha,
+        })
+        .then(result=>{
+          done();
+        })
+        .catch(err=>{
+          console.log(err.message);
+          done(new Error(err.message));
+        })
+      })
+    });
+    it("Deletes the large file", function (done) {
+      fs.readFile(testData + "/Large.png", "utf8", (err, localContents) => {
+        if (err) {
+          done(err);
+        }
+
+        axios.post(`http://localhost:${port}/crud/delete/${org}/${repo}`, {
+          path: "test_data/Temp_Large.png",
+          message: "[skip travis] Test commit",
+          sha: large_sha,
         })
         .then(result=>{
           done();
