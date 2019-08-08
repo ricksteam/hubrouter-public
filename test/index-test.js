@@ -58,9 +58,14 @@ describe("Hubcrud functionality", function () {
           path: "test_data"
         })
           .then(result => {
-            console.log(result.data);
+            //console.log(result.data);
             let gitFiles = result.data;
             assert.equal(gitFiles.length, localFiles.length);
+            for(let i = 0; i < gitFiles.length; i++){
+              let filename = gitFiles[i];
+              //console.log(filename.name);
+              assert(localFiles.includes(filename.name), "Local files includes remote filename");
+            }
             done();
           })
           .catch(err => {
@@ -71,6 +76,7 @@ describe("Hubcrud functionality", function () {
     it("Gets the contents of a small file w/o a sha", function (done) {
 
       fs.readFile(testData + "/hello.world", "utf8", (err, localContents) => {
+        //If the local machine uses Windows line endings, compensate for this
         localContents = localContents.replace("\r", "");
 
         if (err) {
@@ -115,6 +121,7 @@ describe("Hubcrud functionality", function () {
       });
     });
     it("Doesn't get a non-existant file", function (done) {
+      console.log("There should be an error statement below this line.")
       axios.post(`http://localhost:${port}/crud/retrieve/${org}/${repo}`, {
         path: "bad_path.txt"
       })
