@@ -1,7 +1,7 @@
 {
   "name": "hubcrud",
   "version": "1.0.10",
-  "main": "index.js",
+  "main": "index.js", 
   "repository": "https://github.com/ricksteam/hubrouter-public.git",
   "contributors": [
     "BRicks Lab Student <rickslabstudent@gmail.com>"
