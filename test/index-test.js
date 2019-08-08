@@ -37,6 +37,7 @@ app.use("/", routes);
 //before and after approach from https://stackoverflow.com/questions/38223053/ensuring-server-app-runs-before-mocha-tests-start
 
 
+let tiny_sha = ""; //Sometimes we need to store a sha for a later operation (such as deleting something we added).
 let medium_sha = ""; //Sometimes we need to store a sha for a later operation (such as deleting something we added).
 let large_sha = ""; //Sometimes we need to store a sha for a later operation (such as deleting something we added).
 
@@ -62,7 +63,7 @@ describe("Hubcrud functionality", function () {
             //console.log(result.data);
             let gitFiles = result.data;
             assert.equal(gitFiles.length, localFiles.length);
-            for(let i = 0; i < gitFiles.length; i++){
+            for (let i = 0; i < gitFiles.length; i++) {
               let filename = gitFiles[i];
               //console.log(filename.name);
               assert(localFiles.includes(filename.name), "Local files includes remote filename");
@@ -98,8 +99,8 @@ describe("Hubcrud functionality", function () {
           })
       });
     });
-    it("Get the contents of a small file with a sha", function(done){
-      
+    it("Get the contents of a small file with a sha", function (done) {
+
       fs.readFile(testData + "/hello.world", "utf8", (err, localContents) => {
         localContents = localContents.replace("\r", "");
 
@@ -155,51 +156,112 @@ describe("Hubcrud functionality", function () {
           })
       });
     });
+    it("Puts a tiny file ", function (done) {
+      fs.readFile(testData + "/hello.world", "base64", (err, localContents) => {
+        if (err) {
+          done(err);
+        }
+
+        console.log(localContents.length);
+
+        axios.post(`http://localhost:${port}/crud/create/${org}/${repo}`, {
+          path: "test_data/temp_hello.world",
+          message: "[skip travis] Test commit",
+          content: localContents,
+          encoding: "base64"
+        })
+          .then(result => {
+            //console.log(result.data.message);
+            //console.log(result.data.content.sha);
+            tiny_sha = result.data.content.sha;
+            //console.log(result.data.substr(0, 1000));
+            done();
+          })
+          .catch(err => {
+            console.log("Error in put");
+            console.log(err.message);
+            done(new Error(err.message));
+          })
+      })
+    });
     it("Puts a medium file (slightly larger than 1mb)", function (done) {
+      fs.readFile(testData + "/Noise.png", "base64", (err, localContents) => {
+        if (err) {
+          done(err);
+        }
+
+        console.log(localContents.length);
+
+        axios.post(`http://localhost:${port}/crud/create/${org}/${repo}`, {
+          path: "test_data/Temp_Noise.png",
+          message: "[skip travis] Test commit",
+          content: localContents,
+          encoding: "base64"
+        })
+          .then(result => {
+            //console.log(result.data.message);
+            //console.log(result.data.content.sha);
+            medium_sha = result.data.content.sha;
+            //console.log(result.data.substr(0, 1000));
+            done();
+          })
+          .catch(err => {
+            console.log("Error in put");
+            console.log(err.message);
+            done(new Error(err.message));
+          })
+      })
+    });
+    it("Puts a large file (~10mb)", function (done) {
+      fs.readFile(testData + "/Large.png", "base64", (err, localContents) => {
+        if (err) {
+          done(err);
+        }
+
+        console.log(localContents.length);
+
+       
+        axios({
+          url:`http://localhost:${port}/crud/create/${org}/${repo}`,
+          method:'post',
+          maxContentLength:Infinity,
+          maxBodyLength:Infinity,
+          data:{
+            path: "test_data/Temp_Large.png",
+            message: "[skip travis] Test commit",
+            content: localContents,
+            encoding: "base64"
+          }
+        })
+          .then(result => {
+            console.log(result.data.message);
+            console.log(result.data.content.sha);
+            large_sha = result.data.content.sha;
+            //console.log(result.data.substr(0, 1000));
+            done();
+          })
+          .catch(err => {
+            console.log("Error in put");
+            console.log(err.message);
+            done(new Error(err.message));
+          })
+      })
+    });
+    it("Deletes the tiny file", function (done) {
       fs.readFile(testData + "/Noise.png", "utf8", (err, localContents) => {
         if (err) {
           done(err);
         }
 
-        axios.post(`http://localhost:${port}/crud/create/${org}/${repo}`, {
-          path: "test_data/Temp_Noise.png",
+        axios.post(`http://localhost:${port}/crud/delete/${org}/${repo}`, {
+          path: "test_data/temp_hello.world",
           message: "[skip travis] Test commit",
-          content: localContents
+          sha: tiny_sha,
         })
         .then(result=>{
-          console.log(result.data.message);
-          console.log(result.data.content.sha);
-          medium_sha = result.data.content.sha;
-          //console.log(result.data.substr(0, 1000));
           done();
         })
         .catch(err=>{
-          console.log("Error in put");
-          console.log(err.message);
-          done(new Error(err.message));
-        })
-      })
-    });
-    it("Puts a large file (~10mb)", function (done) {
-      fs.readFile(testData + "/Large.png", "utf8", (err, localContents) => {
-        if (err) {
-          done(err);
-        }
-
-        axios.post(`http://localhost:${port}/crud/create/${org}/${repo}`, {
-          path: "test_data/Temp_Large.png",
-          message: "[skip travis] Test commit",
-          content: localContents
-        })
-        .then(result=>{
-          console.log(result.data.message);
-          console.log(result.data.content.sha);
-          large_sha = result.data.content.sha;
-          //console.log(result.data.substr(0, 1000));
-          done();
-        })
-        .catch(err=>{
-          console.log("Error in put");
           console.log(err.message);
           done(new Error(err.message));
         })

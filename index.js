@@ -30,8 +30,8 @@ const bodyParser = require("body-parser");
 
 
 app = express();
-app.use(bodyParser.json({ limit: '50mb' }));
-app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+app.use(bodyParser({ limit: '50mb' }));
+//app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
 const _ = require("lodash");
 let stringify = require("json-stringify-safe");
@@ -64,24 +64,25 @@ function fromAsciiToBase64(ascii) {
  * @param {String} message The commit message to attach to the commit
  * @return {Promise} The resulting promise from the commit network call.
  */
- function saveToGithub(owner, repo, filename, contents, token, message) {
+function saveToGithub(owner, repo, filename, contents, token, message, encoding) {
   let realMessage = message ? message : "Created via file API";
+  let realEncoding = encoding ? encoding : "utf8";
 
   //Get the HEAD. Process explained here http://www.levibotelho.com/development/commit-a-file-with-the-github-api/
   let call = `https://api.github.com/repos/${owner}/${repo}/git/refs/heads/master?access_token=${token}`;
   let commitURL, commitSHA, treeSHA, treeURL, blobSHA, nextTreeSHA, nextCommitSHA;
-  let p =  axios.get(call)
+  let p = axios.get(call)
     .then(result => {
-      console.log(result.data.ref);
-      console.log(result.data.object.url);
+      //console.log(result.data.ref);
+      //console.log(result.data.object.url);
       commitURL = result.data.object.url;
-      console.log(result.data.object.sha);
+      // console.log(result.data.object.sha);
 
 
       //Now get the commit object
       return axios.get(commitURL);
     })
-    .then(result=>{
+    .then(result => {
 
       commitSHA = result.data.sha;
       treeSHA = result.data.tree.sha;
@@ -89,81 +90,113 @@ function fromAsciiToBase64(ascii) {
 
       //Now post blob of the data
 
-      return axios.post(`https://api.github.com/repos/${owner}/${repo}/git/blobs?access_token=${token}`,{
-        content: fromAsciiToBase64(contents),
-        encoding: "base64"
-      });
+      let realContents = contents;
+      if(realEncoding == "utf8"){
+        console.log("Encoding from ASCII to base64");
+        realContents = fromAsciiToBase64(contents)
+      }
+      else{
+        console.log("Putting base64 data directly.");
+      }
+
+      return axios({
+        url: `https://api.github.com/repos/${owner}/${repo}/git/blobs?access_token=${token}`,
+        method: 'post',
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity,
+        data: {
+          content: realContents,
+          encoding: "base64"
+        }
+      })
+
+      /* return axios.post(`https://api.github.com/repos/${owner}/${repo}/git/blobs?access_token=${token}`, {
+         content: fromAsciiToBase64(contents),
+         encoding: "base64"
+       });*/
     })
-    .then(result=>{
+    .then(result => {
 
       blobSHA = result.data.sha;
 
       //Get the tree
 
-      return axios.get(treeURL + `?recursive=1&access_token=${token}`);
+      return axios.get(treeURL + `?access_token=${token}`);
     })
-    .then(result=>{
+    .then(result => {
 
-      console.log(JSON.stringify(result.data, null, 2));
+      //console.log(JSON.stringify(result.data, null, 2));
 
       let newTreeSHA = result.data.sha;
-      console.log(newTreeSHA + " " + treeSHA);
+      // console.log(newTreeSHA + " " + treeSHA);
 
       //Create a new tree entry with the new file
 
       let t = [{
-        path:filename,
-        type:"blob",
-        mode:"100644",
-        sha:blobSHA,
+        path: filename,
+        type: "blob",
+        mode: "100644",
+        sha: blobSHA,
       }];
 
-      console.log(t);
+      //console.log(t);
 
-      return axios.post(`https://api.github.com/repos/${owner}/${repo}/git/trees?access_token=${token}`,{
+      return axios.post(`https://api.github.com/repos/${owner}/${repo}/git/trees?access_token=${token}`, {
         tree: t,
         base_tree: newTreeSHA,
       });
     })
-    .then(result=>{
+    .then(result => {
       nextTreeSHA = result.data.sha;
 
       //Create a new commit pointing to the that tree
 
-      return axios.post(`https://api.github.com/repos/${owner}/${repo}/git/commits?access_token=${token}`,{
+      return axios.post(`https://api.github.com/repos/${owner}/${repo}/git/commits?access_token=${token}`, {
         message,
         tree: nextTreeSHA,
         parents: [commitSHA],
       })
 
     })
-    .then(result=>{
+    .then(result => {
 
       nextCommitSHA = result.data.sha;
 
       //Now point the head to this commit
-      return axios.patch(`https://api.github.com/repos/${owner}/${repo}/git/refs/heads/master?access_token=${token}`,{
-        sha:nextCommitSHA
+      return axios.patch(`https://api.github.com/repos/${owner}/${repo}/git/refs/heads/master?access_token=${token}`, {
+        sha: nextCommitSHA
       })
 
 
     })
-    
-
-
-
-     /* let call = `https://api.github.com/repos/${owner}/${repo}/contents/${filename}?access_token=${token}`;
-      //console.log(call);
-      return axios.put(call, {
-        message: realMessage,
-        content: fromAsciiToBase64(contents)
-      });
+    .then(result => {
+      //Resolve to a promise with the blob sha in the same format as if we had used the contents api
+      return new Promise(function (resolve, reject) {
+        resolve({
+          data: {
+            content: {
+              sha: blobSHA
+            }
+          }
+        });
+      })
     })
-    /*.catch(err => {
-      console.log("ERROR in getting head reference. " + err);
-    })*/
 
-    return p;
+
+
+
+  /* let call = `https://api.github.com/repos/${owner}/${repo}/contents/${filename}?access_token=${token}`;
+   //console.log(call);
+   return axios.put(call, {
+     message: realMessage,
+     content: fromAsciiToBase64(contents)
+   });
+ })
+ /*.catch(err => {
+   console.log("ERROR in getting head reference. " + err);
+ })*/
+
+  return p;
 
 
 
@@ -423,10 +456,11 @@ routes.post("/crud/create/:org/:repo", (req, res) => {
   let content = req.body.content;
   let message = req.body.message;
   let org = req.params.org;
+  let encoding = req.body.encoding;
 
   //console.log(`Got db ${repo} ${path} ${message}`);
 
-  let promise = saveToGithub(org, repo, path, content, accessToken, message);
+  let promise = saveToGithub(org, repo, path, content, accessToken, message, encoding);
   //console.log(promise);
   promise
     .then(result => {
