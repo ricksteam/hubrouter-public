@@ -30,8 +30,10 @@ const bodyParser = require("body-parser");
 
 
 app = express();
-app.use(bodyParser({ limit: '50mb' }));
-//app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+app.use(bodyParser.json({ limit: '210mb' }));
+app.use(bodyParser.text({ limit: '210mb' }));
+app.use(bodyParser.raw({ limit: '210mb' }));
+app.use(bodyParser.urlencoded({ limit: '210mb', extended: true, parameterLimit:1100000 }));
 
 const _ = require("lodash");
 let stringify = require("json-stringify-safe");
@@ -80,7 +82,7 @@ function saveToGithub(owner, repo, filename, contents, token, message, encoding)
 
 
       //Now get the commit object
-      return axios.get(commitURL);
+      return axios.get(commitURL + `?access_token=${token}`);
     })
     .then(result => {
 
