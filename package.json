@@ -19,6 +19,6 @@
     "json-stringify-safe": "^5.0.1",
     "lodash": "^4.17.13",
     "mocha": "^6.1.4",
-    "redis": "^2.8.0"
+    "redis": "^3.1.1"
   }
 }
